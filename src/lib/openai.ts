@@ -1,11 +1,13 @@
 import { buildDemoParsedScope } from "@/lib/demo-fixtures";
+import { attachMilestonesToScope } from "@/lib/milestones";
 import { getPresetById } from "@/lib/packages";
 import type { ParsedScope } from "@/lib/types";
 
-const SYSTEM_PROMPT = `You are ScopePay, an assistant for freelance video editors and creators.
+const SYSTEM_PROMPT = `You are ScopePay (FastCut lane — Deliverable → Milestone Pay), an assistant for freelance video editors and creators.
 Turn a messy client brief into:
 1) A professional Statement of Work in markdown (headers, deliverables, revision policy, timeline).
 2) Structured PayPal invoice line items tied to video deliverables (not generic consulting).
+3) Milestone payment plan: **40% deposit on kickoff**, **60% balance on final delivery** — reflect this in the SOW "Milestone billing" section.
 
 Respond ONLY with valid JSON matching this schema:
 {
@@ -14,14 +16,14 @@ Respond ONLY with valid JSON matching this schema:
   "clientEmail": string,
   "currency": "USD",
   "dueDays": number (7-30),
-  "sowMarkdown": string (full markdown SOW),
+  "sowMarkdown": string (full markdown SOW including milestone billing table),
   "lineItems": [{ "name": string, "description": string, "quantity": number, "unitPrice": number }],
   "revisionCap": number,
   "deliverables": string[],
   "notes": string
 }
 
-Use realistic USD pricing for creator packages. Line item totals should match the SOW total.`;
+Use realistic USD pricing for creator packages. Line item totals should match the SOW package total. Do NOT put deposit/balance in lineItems — those are split into two PayPal invoices in the app.`;
 
 export async function parseScopeWithAI(input: {
   message: string;
@@ -95,5 +97,8 @@ If client name/email missing, infer plausible sandbox demo values.`;
   if (input.clientName) parsed.clientName = input.clientName;
   if (input.clientEmail) parsed.clientEmail = input.clientEmail;
 
-  return { parsed, mode: "live" };
+  return {
+    parsed: attachMilestonesToScope(parsed, input.presetId),
+    mode: "live",
+  };
 }

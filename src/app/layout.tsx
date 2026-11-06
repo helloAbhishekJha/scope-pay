@@ -13,12 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ScopePay — Creator scope to PayPal invoice",
+  title: "ScopePay — Deliverable → Milestone Pay",
   description:
-    "Turn video deliverable briefs into SOW markdown and PayPal sandbox invoices for the PayPal AI Hackathon.",
+    "Video deliverable templates, milestone checklist, and deposit + balance PayPal sandbox invoices (Hackathon 4.7).",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"

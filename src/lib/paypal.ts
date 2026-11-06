@@ -1,4 +1,4 @@
-import type { InvoiceResult, ParsedScope } from "@/lib/types";
+import type { InvoiceResult, MilestoneId, ParsedScope } from "@/lib/types";
 
 function paypalBaseUrl(): string {
   return process.env.PAYPAL_MODE === "live"
@@ -54,37 +54,43 @@ function invoiceDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function demoInvoiceId(): string {
-  return `DEMO-INV-${Date.now().toString(36).toUpperCase()}`;
+function demoInvoiceId(milestoneId?: MilestoneId): string {
+  const suffix = milestoneId ? `-${milestoneId.toUpperCase()}` : "";
+  return `DEMO-INV${suffix}-${Date.now().toString(36).toUpperCase()}`;
 }
 
 export async function createAndSendInvoice(
   scope: ParsedScope,
+  options?: { milestoneId?: MilestoneId; milestoneLabel?: string },
 ): Promise<InvoiceResult> {
   const total = computeTotal(scope);
   const currency = scope.currency || "USD";
 
   if (!hasPayPalCredentials()) {
     return {
-      invoiceId: demoInvoiceId(),
+      invoiceId: demoInvoiceId(options?.milestoneId),
       status: "SENT",
       total,
       currency,
       demoMode: true,
       sentAt: new Date().toISOString(),
       href: "https://www.sandbox.paypal.com/invoicing/demo",
+      milestoneId: options?.milestoneId,
+      milestoneLabel: options?.milestoneLabel,
     };
   }
 
   const token = await getPayPalAccessToken();
   if (!token) {
     return {
-      invoiceId: demoInvoiceId(),
+      invoiceId: demoInvoiceId(options?.milestoneId),
       status: "SENT",
       total,
       currency,
       demoMode: true,
       sentAt: new Date().toISOString(),
+      milestoneId: options?.milestoneId,
+      milestoneLabel: options?.milestoneLabel,
     };
   }
 
@@ -94,7 +100,7 @@ export async function createAndSendInvoice(
 
   const payload = {
     detail: {
-      invoice_number: `SP-${Date.now().toString().slice(-8)}`,
+      invoice_number: `SP-${options?.milestoneId?.slice(0, 3).toUpperCase() ?? "PKG"}-${Date.now().toString().slice(-8)}`,
       reference: scope.projectTitle.slice(0, 120),
       invoice_date: invoiceDate(),
       currency_code: currency,
@@ -185,6 +191,8 @@ export async function createAndSendInvoice(
     currency,
     demoMode: false,
     sentAt: new Date().toISOString(),
+    milestoneId: options?.milestoneId,
+    milestoneLabel: options?.milestoneLabel,
   };
 }
 

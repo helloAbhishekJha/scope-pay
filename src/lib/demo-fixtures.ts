@@ -1,3 +1,4 @@
+import { attachMilestonesToScope } from "@/lib/milestones";
 import { getPresetById } from "@/lib/packages";
 import type { ParsedScope } from "@/lib/types";
 
@@ -76,7 +77,7 @@ Up to **${preset?.revisionCap ?? 2}** consolidated revision round(s). Additional
 
 Kickoff on deposit; first cut within **5 business days** of asset handoff unless otherwise noted in your brief.
 
-## Investment
+## Investment (package total)
 
 | Item | Qty | Unit | Subtotal |
 |------|-----|------|----------|
@@ -88,6 +89,15 @@ ${lineItems
   .join("\n")}
 | **Total** | | | **$${total.toFixed(2)} ${preset?.currency ?? "USD"}** |
 
+## Milestone billing (PayPal)
+
+| Milestone | Trigger | Amount |
+|-----------|---------|--------|
+| **Deposit (40%)** | Kickoff — first invoice | **$${(total * 0.4).toFixed(2)}** |
+| **Balance (60%)** | Final delivery accepted | **$${(total * 0.6).toFixed(2)}** |
+
+Two separate PayPal sandbox invoices — deposit to start, balance on delivery.
+
 ## Notes from brief
 
 > ${message.trim().slice(0, 500)}
@@ -97,7 +107,7 @@ ${lineItems
 *Generated in **demo mode** (missing \`OPENAI_API_KEY\`). Add your key for AI-authored SOW copy.*
 `;
 
-  return {
+  const base: ParsedScope = {
     projectTitle,
     clientName,
     clientEmail,
@@ -109,4 +119,6 @@ ${lineItems
     deliverables,
     notes: "Demo fixture parse — structured output for judges without API keys.",
   };
+
+  return attachMilestonesToScope(base, presetId);
 }

@@ -1,11 +1,11 @@
 # ScopePay
 
-**Creator / video deliverable → PayPal sandbox invoice** — CC-16 PayPal AI Hackathon MVP (matrix ideas **4.2** story on **4.1** architecture).
+**Deliverable → Milestone Pay** for video freelancers — PayPal AI Hackathon 2026 matrix **4.7 FastCut lane**.
 
-ScopePay turns messy client briefs into a **Statement of Work (markdown)** plus structured **line items**, then **creates and sends a PayPal sandbox invoice** via the REST Invoicing API. The UI surfaces a real **invoice ID and status** (or clearly labeled demo IDs when sandbox creds are missing).
+ScopePay maps **creator deliverable templates** (reel bundle, ad cut, podcast clips) to a **milestone checklist**, a **Statement of Work (markdown)**, and **two PayPal sandbox invoices**: **40% deposit on kickoff** and **60% balance on final delivery**. The UI shows **two invoice IDs and statuses** (or clearly labeled `DEMO-INV-*` IDs when sandbox creds are missing).
 
 - **Hackathon:** [PayPal AI Hackathon on Devpost](https://paypalaihackathon.devpost.com/)
-- **Differentiation:** Preset **video/creator packages** (reel bundle, ad cut, podcast clips) + **SOW export** — not a generic invoice chat clone.
+- **Differentiation:** Milestone billing + deliverable checklist — not a generic “chat → one invoice” clone.
 
 ## Quick start (judges)
 
@@ -14,6 +14,7 @@ ScopePay turns messy client briefs into a **Statement of Work (markdown)** plus 
    ```bash
    git clone https://github.com/helloAbhishekJha/scope-pay.git
    cd scope-pay
+   git checkout feature/4.7-milestone-pay
    npm install
    cp .env.example .env.local   # optional keys
    npm run dev
@@ -24,10 +25,12 @@ ScopePay turns messy client briefs into a **Statement of Work (markdown)** plus 
 3. **Demo without any API keys:**
    - Pick a preset package
    - Click **Run judge demo fixture**
-   - Review SOW → **Create & send PayPal invoice**
-   - Confirm **invoice ID** + **SENT** status (demo mode badge)
+   - Review SOW + **milestone checklist**
+   - **Create & send deposit invoice** → note `DEMO-INV-DEPOSIT-*`
+   - **Create & send balance invoice** → note `DEMO-INV-BALANCE-*`
+   - Confirm both show **SENT** status
 
-4. **Full sandbox path:** add env vars below, use **Generate SOW + line items** with your OpenAI key, then send — IDs come from PayPal sandbox.
+4. **Full sandbox path:** add env vars below, use **Generate SOW + milestones** with your OpenAI key, then send both milestone invoices — IDs come from PayPal sandbox.
 
 ## Environment variables
 
@@ -51,7 +54,7 @@ Never commit secrets. Use `.env.local` locally and platform env vars when deploy
 3. Set `PAYPAL_INVOICER_EMAIL` to your sandbox business login email.
 4. Use a sandbox personal email as the **client email** in the UI (or in the brief) so `send_to_recipient` delivers to a test inbox.
 
-**Integration:** OAuth2 client credentials → [`/v2/invoicing/invoices`](https://developer.paypal.com/docs/api/invoicing/v2/) create draft → `/send`. No PayPal MCP required for this MVP; REST keeps judge setup to env vars only.
+**Integration:** OAuth2 client credentials → [`/v2/invoicing/invoices`](https://developer.paypal.com/docs/api/invoicing/v2/) create draft → `/send` **twice** (deposit + balance milestone line items). No PayPal MCP required for this MVP; REST keeps judge setup to env vars only.
 
 ## Scripts
 
@@ -64,26 +67,31 @@ Never commit secrets. Use `.env.local` locally and platform env vars when deploy
 
 ## Judge test flow (≤3 min video outline)
 
-1. Problem: freelancers lose margin to **scope creep** on video gigs.
-2. Show **preset package** + authentic brief.
-3. AI SOW panel + **Copy markdown**.
-4. PayPal **invoice ID** on screen + status refresh.
+1. Problem: creators lose time to **scope + billing**, not just editing (FastCut wedge).
+2. Show **deliverable template** + authentic brief.
+3. **Milestone checklist** + SOW markdown copy.
+4. Two PayPal **invoice IDs** on screen (deposit + balance) + status refresh.
 5. Mention sandbox + Devpost alignment.
 
 ## Devpost alignment
 
-- **PayPal:** Central — sandbox invoicing create + send with visible artifact ID.
-- **AI:** Parses deliverables → SOW + line items (live OpenAI or documented demo fixture).
+- **PayPal:** Central — two sandbox invoicing create + send flows with visible artifact IDs.
+- **AI:** Parses deliverables → SOW + package line items + **40/60 milestone split** (live OpenAI or documented demo fixture).
 - **Public repo:** MIT license, run instructions, env-based secrets.
 - **Hosted demo (optional):** Deploy to [Render](https://render.com) — Web Service, Node, build `npm install && npm run build`, start `npm run start -p $PORT`, add env vars in dashboard.
 
 ## Architecture
 
 ```text
-Brief + preset → POST /api/parse → SOW markdown + line items
-                → POST /api/invoice → PayPal OAuth + create + send
+Brief + preset → POST /api/parse → SOW + package line items + milestones (40/60)
+                → POST /api/invoice { scope, milestoneId: deposit|balance }
+                → PayPal OAuth + create + send (per milestone)
                 → GET /api/invoice/status?id=… → refresh status
 ```
+
+## Release
+
+- **v0.1.0** — Matrix 4.7 milestone billing (deposit + balance invoices, checklist UI).
 
 ## License
 

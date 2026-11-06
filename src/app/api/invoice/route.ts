@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
+import { scopeForMilestoneInvoice } from "@/lib/milestones";
 import { createAndSendInvoice } from "@/lib/paypal";
-import type { ParsedScope } from "@/lib/types";
+import type { InvoiceRequest } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
-    const scope = (await request.json()) as ParsedScope;
-    if (!scope?.lineItems?.length || !scope.clientEmail) {
+    const body = (await request.json()) as InvoiceRequest;
+    const scope = body.scope;
+    const milestoneId = body.milestoneId;
+    if (!scope?.clientEmail || !milestoneId) {
       return NextResponse.json(
-        { error: "Invalid scope payload" },
+        { error: "scope and milestoneId (deposit | balance) are required" },
         { status: 400 },
       );
     }
 
-    const invoice = await createAndSendInvoice(scope);
+    const milestoneScope = scopeForMilestoneInvoice(scope, milestoneId);
+    const milestone = scope.milestones?.find((m) => m.id === milestoneId);
+    const invoice = await createAndSendInvoice(milestoneScope, {
+      milestoneId,
+      milestoneLabel: milestone?.title,
+    });
     return NextResponse.json({ invoice });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invoice failed";
