@@ -200,7 +200,7 @@ export async function getInvoiceStatus(
   invoiceId: string,
   existingToken?: string,
 ): Promise<{ status: string; href?: string }> {
-  if (invoiceId.startsWith("DEMO-INV-")) {
+  if (invoiceId.startsWith("DEMO-INV")) {
     return { status: "SENT", href: undefined };
   }
 

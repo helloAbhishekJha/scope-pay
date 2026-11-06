@@ -7,30 +7,31 @@ ScopePay maps **creator deliverable templates** (reel bundle, ad cut, podcast cl
 - **Hackathon:** [PayPal AI Hackathon on Devpost](https://paypalaihackathon.devpost.com/)
 - **Differentiation:** Milestone billing + deliverable checklist — not a generic “chat → one invoice” clone.
 
-## Quick start (judges)
+## Judge quick start
 
-1. Clone and install:
+**Zero API keys** — demo mode uses fixtures and fake PayPal IDs.
 
-   ```bash
-   git clone https://github.com/helloAbhishekJha/scope-pay.git
-   cd scope-pay
-   git checkout feature/4.7-milestone-pay
-   npm install
-   cp .env.example .env.local   # optional keys
-   npm run dev
-   ```
+```bash
+git clone https://github.com/helloAbhishekJha/scope-pay.git
+cd scope-pay
+npm install
+cp .env.example .env.local   # optional; leave keys empty for demo
+npm run dev
+```
 
-2. Open **http://127.0.0.1:4419**
+Open **http://127.0.0.1:4419**
 
-3. **Demo without any API keys:**
-   - Pick a preset package
-   - Click **Run judge demo fixture**
-   - Review SOW + **milestone checklist**
-   - **Create & send deposit invoice** → note `DEMO-INV-DEPOSIT-*`
-   - **Create & send balance invoice** → note `DEMO-INV-BALANCE-*`
-   - Confirm both show **SENT** status
+### 60-second demo (two milestone invoice IDs)
 
-4. **Full sandbox path:** add env vars below, use **Generate SOW + milestones** with your OpenAI key, then send both milestone invoices — IDs come from PayPal sandbox.
+| Step | Action | What judges should see |
+|------|--------|------------------------|
+| 1 | Choose **Reel bundle** (or any preset) | Package + brief prefilled |
+| 2 | Click **Run judge demo fixture** | SOW + **milestone checklist** (deposit 40% / balance 60%) |
+| 3 | **Create & send deposit invoice** | ID like `DEMO-INV-DEPOSIT-*`, status **SENT**, “PayPal demo mode” badge |
+| 4 | **Create & send balance invoice** | ID like `DEMO-INV-BALANCE-*`, status **SENT** |
+| 5 | (Optional) **Refresh status** on either card | Stays **SENT** in demo |
+
+**Full sandbox path:** set PayPal env vars below, click **Generate SOW + milestones** (needs `OPENAI_API_KEY` for live copy), send both milestone invoices — IDs come from PayPal sandbox.
 
 ## Environment variables
 
@@ -52,7 +53,7 @@ Never commit secrets. Use `.env.local` locally and platform env vars when deploy
 1. Create a **Sandbox Business** and **Sandbox Personal** account at [developer.paypal.com](https://developer.paypal.com/).
 2. Create a **REST app** (Sandbox) and copy Client ID + Secret.
 3. Set `PAYPAL_INVOICER_EMAIL` to your sandbox business login email.
-4. Use a sandbox personal email as the **client email** in the UI (or in the brief) so `send_to_recipient` delivers to a test inbox.
+4. Use a sandbox personal email as the **client email** in the UI so `send_to_recipient` delivers to a test inbox.
 
 **Integration:** OAuth2 client credentials → [`/v2/invoicing/invoices`](https://developer.paypal.com/docs/api/invoicing/v2/) create draft → `/send` **twice** (deposit + balance milestone line items). No PayPal MCP required for this MVP; REST keeps judge setup to env vars only.
 
@@ -60,10 +61,27 @@ Never commit secrets. Use `.env.local` locally and platform env vars when deploy
 
 | Command | Purpose |
 |---------|---------|
-| `npm run dev` | Dev server on port **4419** |
+| `npm run dev` | Dev server on **http://127.0.0.1:4419** |
 | `npm run build` | Production build |
+| `npm run start` | Production server (`PORT` from host, default **4419**) |
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint |
+
+## Deploy on Render
+
+**Blueprint (recommended):** connect repo and use [`render.yaml`](./render.yaml) — Web Service, Node, build `npm install && npm run build`, start `npm run start`.
+
+**Manual dashboard:**
+
+| Setting | Value |
+|---------|--------|
+| Type | Web Service |
+| Runtime | Node |
+| Build | `npm install && npm run build` |
+| Start | `npm run start` |
+| Env | Same table as above (`sync: false` secrets in dashboard) |
+
+Helper: `./scripts/deploy-render.sh` prints the same checklist.
 
 ## Judge test flow (≤3 min video outline)
 
@@ -78,7 +96,6 @@ Never commit secrets. Use `.env.local` locally and platform env vars when deploy
 - **PayPal:** Central — two sandbox invoicing create + send flows with visible artifact IDs.
 - **AI:** Parses deliverables → SOW + package line items + **40/60 milestone split** (live OpenAI or documented demo fixture).
 - **Public repo:** MIT license, run instructions, env-based secrets.
-- **Hosted demo (optional):** Deploy to [Render](https://render.com) — Web Service, Node, build `npm install && npm run build`, start `npm run start -p $PORT`, add env vars in dashboard.
 
 ## Architecture
 
@@ -89,9 +106,11 @@ Brief + preset → POST /api/parse → SOW + package line items + milestones (40
                 → GET /api/invoice/status?id=… → refresh status
 ```
 
-## Release
+## Releases
 
+- **v0.2.0** — Milestone pay on `main` (judge quick start, Render blueprint, demo two-invoice path).
 - **v0.1.0** — Matrix 4.7 milestone billing (deposit + balance invoices, checklist UI).
+- **v0.0.0** — Initial SOW → single invoice MVP.
 
 ## License
 
